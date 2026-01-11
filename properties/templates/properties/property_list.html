@@ -1,0 +1,40 @@
+<!-- properties/templates/properties/property_list.html -->
+{% extends 'base.html' %}
+
+{% block title %}Available Properties{% endblock %}
+
+{% block content %}
+<h2>Available Properties</h2>
+
+{% if properties %}
+    <p>Showing {{ properties|length }} properties</p>
+    
+    {% for property in properties %}
+    <div class="property-card">
+        <h3>{{ property.title }}</h3>
+        <p class="property-price">${{ property.price }}</p>
+        <p class="property-location">📍 {{ property.location }}</p>
+        <p>{{ property.short_description }}</p>
+        <p><strong>Type:</strong> {{ property.get_property_type_display }}</p>
+        <p><strong>Bedrooms:</strong> {{ property.bedrooms }} | <strong>Bathrooms:</strong> {{ property.bathrooms }}</p>
+        <a href="{% url 'property_detail' property.id %}">View Details</a>
+    </div>
+    {% endfor %}
+    
+    {% if is_paginated %}
+    <div class="pagination">
+        {% if page_obj.has_previous %}
+            <a href="?page={{ page_obj.previous_page_number }}">Previous</a>
+        {% endif %}
+        
+        <span>Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
+        
+        {% if page_obj.has_next %}
+            <a href="?page={{ page_obj.next_page_number }}">Next</a>
+        {% endif %}
+    </div>
+    {% endif %}
+{% else %}
+    <p>No properties available at the moment.</p>
+{% endif %}
+{% endblock %}
