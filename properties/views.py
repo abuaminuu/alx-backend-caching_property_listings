@@ -181,7 +181,7 @@ from properties.utils import (
 )
 import json
 from django.views.decorators.cache import never_cache
-
+#  comment here
 @never_cache
 def cache_metrics_view(request):
     """

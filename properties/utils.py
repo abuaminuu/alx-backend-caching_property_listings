@@ -749,3 +749,6 @@ def _get_property_cache_info() -> Dict[str, Any]:
         
     except Exception as e:
         return {'error': str(e)}
+
+def test_fx(n):
+    return n + 1
