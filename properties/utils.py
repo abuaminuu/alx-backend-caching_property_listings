@@ -370,6 +370,8 @@ def get_redis_cache_metrics() -> Dict[str, Any]:
     return total_requests if total_requests > 0 else 0
     return metrics
 
+def get_redis_cache_metrics():
+    pass 
 
 def _get_redis_client() -> Optional[redis.Redis]:
     """
