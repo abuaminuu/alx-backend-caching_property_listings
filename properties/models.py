@@ -3,6 +3,10 @@ from django.db import models
 from django.utils import timezone
 from decimal import Decimal
 import uuid
+from django.core.cache import cache
+import logging
+
+logger = logging.getLogger(__name__)
 
 class Property(models.Model):
     PROPERTY_TYPES = [
@@ -125,4 +129,55 @@ class Property(models.Model):
         if len(self.description) > 100:
             return self.description[:100] + "..."
         return self.description
+    def save(self, *args, **kwargs):
+        """
+        Override save method to add custom logic.
+        Note: Signals will still fire automatically.
+        """
+        is_new = self.pk is None
+        
+        # Add any pre-save logic here
+        if is_new:
+            logger.info(f"Creating new property: {self.title}")
+        else:
+            logger.info(f"Updating property {self.id}: {self.title}")
+        
+        # Call parent save
+        super().save(*args, **kwargs)
+        
+        # Post-save logic (optional)
+        # Signals will handle cache invalidation
+        
+    def delete(self, *args, **kwargs):
+        """
+        Override delete method to add custom logic.
+        Note: Signals will still fire automatically.
+        """
+        logger.info(f"Deleting property {self.id}: {self.title}")
+        
+        # Call parent delete
+        super().delete(*args, **kwargs)
     
+    @classmethod
+    def bulk_create_with_cache_invalidation(cls, objects, batch_size=None):
+        """
+        Custom bulk_create method that handles cache invalidation.
+        
+        Args:
+            objects: List of Property instances
+            batch_size: Batch size for creation
+            
+        Returns:
+            List of created instances
+        """
+        logger.info(f"Bulk creating {len(objects)} properties")
+        
+        # Clear cache before bulk operation
+        cache.delete('all_properties')
+        
+        # Perform bulk create
+        created = super().bulk_create(objects, batch_size=batch_size)
+        
+        logger.info(f"Bulk created {len(created)} properties, cache invalidated")
+        return created
+        

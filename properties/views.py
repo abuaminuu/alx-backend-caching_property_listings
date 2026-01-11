@@ -6,6 +6,14 @@ from django.utils.decorators import method_decorator
 from django.views.decorators.cache import cache_page
 from .models import Property
 from django.http import JsonResponse
+from django.utils.decorators import method_decorator
+from django.views.generic import ListView
+from django.core.cache import cache
+import logging
+from properties.signals import get_cache_invalidation_stats
+
+# Configure logger
+logger = logging.getLogger(__name__)
 
 
 @cache_page(60 * 15)
@@ -56,16 +64,6 @@ class PropertyDetailView(DetailView):
         return property_obj
     # properties/views.py
 
-
-
-from django.utils.decorators import method_decorator
-from django.views.generic import ListView
-from django.core.cache import cache
-from .models import Property
-import logging
-
-# Configure logger
-logger = logging.getLogger(__name__)
 
 # Function-based view with cache_page decorator
 @cache_page(60 * 15)  # Cache for 15 minutes
@@ -153,3 +151,25 @@ def property_list_advanced(request):
     cache.set(cache_key, (properties, context_data), timeout=60 * 15)
     
     return render(request, 'properties/property_list.html', context_data)
+
+
+# create monitoring view
+def cache_monitor(request):
+    """
+    View to monitor cache invalidation signals.
+    """
+    stats = get_cache_invalidation_stats()
+    
+    if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+        # Return JSON for AJAX requests
+        return JsonResponse(stats)
+    
+    # Return HTML for browser requests
+    context = {
+        'stats': stats,
+        'total_properties': Property.objects.count(),
+        'cache_working': cache.get('all_properties') is not None,
+    }
+    
+    return render(request, 'properties/cache_monitor.html', context)
+
